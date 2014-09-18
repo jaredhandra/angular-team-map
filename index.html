@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<!-- Angular -->
+	<script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.2.15/angular.min.js"></script>
+    
+    <!-- JQuery -->
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+
+    <!-- Bootstrap -->
+    <link rel="stylesheet" href="http://netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css">
+    <link rel="stylesheet" href="http://netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap-theme.min.css">
+    <script src="http://netdna.bootstrapcdn.com/bootstrap/3.1.1/js/bootstrap.min.js"></script>
+
+    <!-- Leaflet -->
+    <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.css" />
+    <script src="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.js"></script>
+    <style>
+    #map {height: 300px; }
+    </style>
+
+</head>
+
+<body ng-app="teamApp">
+	<div id="map"></div>
+	<div ng-controller="TeamCtrl as teams">
+		<table class="table table-hover">
+			<thead>
+				<tr>
+					<th>Name</th>
+					<th>League</th>
+					<th>Location</th>
+				</tr>
+			</thead>
+			<tbody>
+				<tr ng-repeat="team in teams.entries" ng-click="clicked(team)" ng-class="selectClass(team)">
+					<td>{{team.name}}</td>
+					<td>{{team.league}}</td>
+					<td>{{team.location}}</td>
+				</tr>
+			</tbody>
+		</table>
+	</div>
+</body>
+
+<script>
+	//Angular
+	(function (){
+		var app = angular.module('teamApp', []);
+
+		app.controller('TeamCtrl', function ($scope, EntriesFactory) {
+			var entries = EntriesFactory.entries();
+			this.entries = entries;
+
+			$scope.clicked = function (team) {
+				map.panTo([team.lat, team.lng]).setZoom(11);
+				$scope.selected = team;
+			};
+
+			$scope.selectClass = function(team) {
+				return team === $scope.selected ? 'active' : undefined;
+			};
+
+			// Leaflet Code
+			//Set View of the map
+			var map = L.map('map').setView([51.505, -0.09], 5);
+			//Adding streets view and setting max level of zoom
+            L.tileLayer('http://{s}.tiles.mapbox.com/v3/sleepingsuns.jhfh6aep/{z}/{x}/{y}.png', {
+                attribution: 'Map data &copy; [...]',
+                maxZoom: 18
+            }).addTo(map);
+            //Adding popup captions for entries
+            for (var i in entries) {
+                var popup = L.popup()
+                    .setContent("<strong>Team</strong> " + entries[i].name + "</br>"
+                                + "<strong>League</strong> " + entries[i].league + "</br>"
+                                + "<strong>Location</strong> " + entries[i].location);
+                var marker = L.marker([entries[i].lat, entries[i].lng])
+                    .bindPopup(popup)
+                    .addTo(map);
+            }
+        });
+
+		//factory
+		app.factory('EntriesFactory', function($http) {
+			return {
+				entries: function() {
+					return [{
+						name: "Manchester United",
+						league: "Premier League",
+						location: "Manchester, UK",
+						lat: 53.4631,
+                        lng: -2.2914
+					},{
+						name: "Chelsea FC",
+						league: "Premier League",
+						location: "London, UK",
+						lat: 51.5072,
+                        lng: 0.1275
+					},{
+						name: "Borussia Dortmund",
+						league: "Bundasliga",
+						location: "Dortmund, Germany",
+						lat: 51.5167,
+                        lng: 7.4667
+					}];
+				}
+    		}
+    	});
+    })();
+</script>
+
+</html>
